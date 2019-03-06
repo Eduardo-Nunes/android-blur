@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">blur</string>
+    <string name="nothing">nothing</string>
+    <string name="lorem_ipslum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum at felis at
+        ornare. Integer eget gravida nulla, sit amet faucibus sapien. Duis tristique, ligula vel rutrum interdum, dui
+        nulla tempor velit, ut ultrices orci mauris vitae odio.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum at felis at
+        ornare. Integer eget gravida nulla, sit amet faucibus sapien. Duis tristique, ligula vel rutrum interdum, dui
+        nulla tempor velit, ut ultrices orci mauris vitae odio.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum at felis at
+        ornare. Integer eget gravida nulla, sit amet faucibus sapien. Duis tristique, ligula vel rutrum interdum, dui
+        nulla tempor velit, ut ultrices orci mauris vitae odio.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum at felis at
+        ornare. Integer eget gravida nulla, sit amet faucibus sapien. Duis tristique, ligula vel rutrum interdum, dui
+        nulla tempor velit, ut ultrices orci mauris vitae odio.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum at felis at
+        ornare. Integer eget gravida nulla, sit amet faucibus sapien. Duis tristique, ligula vel rutrum interdum, dui
+        nulla tempor velit, ut ultrices orci mauris vitae odio.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum at felis at
+        ornare. Integer eget gravida nulla, sit amet faucibus sapien. Duis tristique, ligula vel rutrum interdum, dui
+        nulla tempor velit, ut ultrices orci mauris vitae odio.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum at felis at
+        ornare. Integer eget gravida nulla, sit amet faucibus sapien. Duis tristique, ligula vel rutrum interdum, dui
+        nulla tempor velit, ut ultrices orci mauris vitae odio.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum at felis at
+        ornare. Integer eget gravida nulla, sit amet faucibus sapien. Duis tristique, ligula vel rutrum interdum, dui
+        nulla tempor velit, ut ultrices orci mauris vitae odio.
+    </string>
+    <string name="sample_size">Sample Size: %s</string>
+    <string name="radius">radius: %s</string>
+    <string name="alpha_text">Alpha: %s</string>
+    <string name="update">Atualizar</string>
+</resources>

@@ -1,0 +1,7 @@
+<resources>
+    <declare-styleable name="BlurLayout">
+        <attr name="blurRadius" format="dimension"/>
+        <attr name="downSampleFactor" format="float"/>
+        <attr name="overlayColor" format="color"/>
+    </declare-styleable>
+</resources>
