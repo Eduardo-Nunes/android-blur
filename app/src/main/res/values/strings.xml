@@ -20,7 +20,9 @@
         nulla tempor velit, ut ultrices orci mauris vitae odio.
     </string>
     <string name="sample_size">Sample Size: %s</string>
-    <string name="radius">radius: %s</string>
+    <string name="radius">max radius: %s</string>
     <string name="alpha_text">Alpha: %s</string>
     <string name="update">Atualizar</string>
+    <string name="size_dinamico">Blur ativado</string>
+    <string name="size_estatico">Blur desativado</string>
 </resources>

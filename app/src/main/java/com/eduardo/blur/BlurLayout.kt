@@ -13,6 +13,8 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewTreeObserver
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.*
 
 class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
@@ -106,7 +108,10 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
             TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10f, context.resources.displayMetrics)
         )
         mDownsampleFactor = a.getFloat(R.styleable.BlurLayout_downSampleFactor, 4f)
-        mOverlayColor = a.getColor(R.styleable.BlurLayout_overlayColor, 0xffffff0)
+        mOverlayColor = a.getColor(
+            R.styleable.BlurLayout_overlayColor,
+            ContextCompat.getColor(context, android.R.color.transparent)
+        )
         a.recycle()
 
         mPaint = Paint()
@@ -120,25 +125,7 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
         }
     }
 
-    fun setDownsampleFactor(factor: Float) {
-        if (factor <= 0) {
-            throw IllegalArgumentException("Downsample factor must be greater than 0.")
-        }
-
-        if (mDownsampleFactor != factor) {
-            mDownsampleFactor = factor
-            mDirty = true // may also change blur radius
-            releaseBitmap()
-            invalidate()
-        }
-    }
-
-    fun setOverlayColor(color: Int) {
-        if (mOverlayColor != color) {
-            mOverlayColor = color
-            invalidate()
-        }
-    }
+    fun getBlurRadius(): Float = mBlurRadius
 
     private fun releaseBitmap() {
         if (mBlurInput != null) {
@@ -259,10 +246,13 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     private fun blur(bitmapToBlur: Bitmap?, blurredBitmap: Bitmap?) {
-        mBlurInput!!.copyFrom(bitmapToBlur)
-        mBlurScript!!.setInput(mBlurInput)
-        mBlurScript!!.forEach(mBlurOutput)
-        mBlurOutput!!.copyTo(blurredBitmap)
+        if (mBlurInput == null || mBlurOutput == null || bitmapToBlur == null || blurredBitmap == null) return
+        with(CoroutineScope(Dispatchers.IO)) {
+            launch { mBlurInput?.copyFrom(bitmapToBlur) }
+            launch { mBlurScript?.setInput(mBlurInput) }
+            launch { mBlurScript?.forEach(mBlurOutput) }
+        }
+        CoroutineScope(Dispatchers.Main).launch { mBlurOutput?.copyTo(blurredBitmap) }
     }
 
     override fun onAttachedToWindow() {
