@@ -133,6 +133,13 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
         }
     }
 
+    fun setOverlayColor(color: Int) {
+        if (mOverlayColor != color) {
+            mOverlayColor = color
+            invalidate()
+        }
+    }
+
     private fun releaseBitmap() {
         if (mBlurInput != null) {
             mBlurInput!!.destroy()
