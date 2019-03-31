@@ -8,25 +8,12 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
+import android.renderscript.*
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewTreeObserver
-import androidx.renderscript.RenderScript
-import androidx.renderscript.ScriptIntrinsicBlur
-import androidx.renderscript.Allocation
-import androidx.renderscript.Element
-import androidx.renderscript.RSRuntimeException
 
-/**
- * A realtime blurring overlay (like iOS UIVisualEffectView). Just put it above
- * the view you want to blur and it doesn't have to be in the same ViewGroup
- *
- *  * realtimeBlurRadius (10dp)
- *  * realtimeDownsampleFactor (4)
- *  * realtimeOverlayColor (#00000000)
- *
- */
 class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     private var mDownsampleFactor: Float = 0.toFloat() // default 4
@@ -142,13 +129,6 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
             mDownsampleFactor = factor
             mDirty = true // may also change blur radius
             releaseBitmap()
-            invalidate()
-        }
-    }
-
-    fun setOverlayColor(color: Int) {
-        if (mOverlayColor != color) {
-            mOverlayColor = color
             invalidate()
         }
     }
@@ -351,7 +331,6 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
         }
 
-        // android:debuggable="true" in AndroidManifest.xml (auto set by build tool)
         private var DEBUG: Boolean? = null
 
         internal fun isDebug(ctx: Context?): Boolean {

@@ -28,7 +28,6 @@ class MainActivity : AppCompatActivity() {
         R.drawable.kakie,
         R.drawable.loving,
         R.drawable.startstar,
-        R.drawable.avengers,
         R.drawable.dcstrange,
         R.drawable.donkeykong,
         R.drawable.fantastic,
@@ -55,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         return when (item?.itemId) {
             R.id.action_change_image -> {
                 selectImage()
-                setOverlayColor(alphaSeekBar.progress)
+//                setOverlayColor(alphaSeekBar.progress)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -67,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         descriptionTextView.text = getString(R.string.lorem_ipslum)
         sampleSizeSeekBar.progress = DEFAULT_SIZE
         radiusSeekBar.progress = DEFAULT_RADIUS
-        alphaSeekBar.progress = DEFAULT_ALPHA
+//        alphaSeekBar.progress = DEFAULT_ALPHA
     }
 
     private fun selectImage() {
@@ -78,7 +77,7 @@ class MainActivity : AppCompatActivity() {
     private fun initListeners() {
         sampleSizeSeekBar.setOnSeekListener(::setSampleSize)
         radiusSeekBar.setOnSeekListener(::setRadius)
-        alphaSeekBar.setOnSeekListener(::setOverlayColor)
+//        alphaSeekBar.setOnSeekListener(::setOverlayColor)
     }
 
     private inline fun SeekBar.setOnSeekListener(crossinline progressCallback: (Int) -> Unit) {
@@ -116,22 +115,22 @@ class MainActivity : AppCompatActivity() {
 
         val alphaRatio = progress.toFloat() / 100
         alphaTitleTextView.text = getString(R.string.alpha_text, "$alphaRatio f")
-        backgroundImageView.post {
-            Palette.Builder(backgroundImageView.drawToBitmap()).generate { palette ->
-                val defaultColor = resources.getColor(android.R.color.transparent)
-                val vibrantColor = palette?.getVibrantColor(defaultColor)
-                val darkVibrantColor = palette?.getDarkVibrantColor(defaultColor)
-                val lightVibrantColor = palette?.getLightVibrantColor(defaultColor)
-                val dominantColor = palette?.getDominantColor(defaultColor)
-                val mutedColor = palette?.getMutedColor(defaultColor)
-                val lightMutedColor = palette?.getLightMutedColor(defaultColor)
-                val darkMutedColor = palette?.getDarkMutedColor(defaultColor)
-                blurView.post {
-                    val alphaColored = getColorWithAlpha(dominantColor ?: defaultColor, alphaRatio)
-                    blurView.setOverlayColor(alphaColored)
-                }
-
-            }
-        }
+//        backgroundImageView.post {
+//            Palette.Builder(backgroundImageView.drawToBitmap()).generate { palette ->
+//                val defaultColor = resources.getColor(android.R.color.transparent)
+//                val vibrantColor = palette?.getVibrantColor(defaultColor)
+//                val darkVibrantColor = palette?.getDarkVibrantColor(defaultColor)
+//                val lightVibrantColor = palette?.getLightVibrantColor(defaultColor)
+//                val dominantColor = palette?.getDominantColor(defaultColor)
+//                val mutedColor = palette?.getMutedColor(defaultColor)
+//                val lightMutedColor = palette?.getLightMutedColor(defaultColor)
+//                val darkMutedColor = palette?.getDarkMutedColor(defaultColor)
+//                blurView.post {
+//                    val alphaColored = getColorWithAlpha(dominantColor ?: defaultColor, alphaRatio)
+//                    blurView.setOverlayColor(alphaColored)
+//                }
+//
+//            }
+//        }
     }
 }

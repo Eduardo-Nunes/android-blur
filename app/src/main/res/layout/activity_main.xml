@@ -83,12 +83,12 @@
                         android:layout_marginStart="8dp"
                         android:id="@+id/alphaTitleTextView"
                         android:textColor="@android:color/white"/>
-                <SeekBar
-                        android:id="@+id/alphaSeekBar"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:max="100"
-                        android:layout_marginBottom="8dp"/>
+                <!--<SeekBar-->
+                        <!--android:id="@+id/alphaSeekBar"-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:max="100"-->
+                        <!--android:layout_marginBottom="8dp"/>-->
                 <TextView
                         android:id="@+id/descriptionTextView"
                         android:layout_width="match_parent"
