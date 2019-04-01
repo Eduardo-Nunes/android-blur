@@ -8,14 +8,14 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.SeekBar
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.Random
-import java.util.Date
 import androidx.core.widget.NestedScrollView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
-private const val DEFAULT_RADIUS = 25
+private const val DEFAULT_RADIUS = 15
+private const val DEFAULT_MARGIN = 24F
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,28 +23,16 @@ class MainActivity : AppCompatActivity() {
         set(value) {
             field = value
             radiusTitleTextView.text = getString(R.string.radius, "$maxRadius px")
-            val scrollPercentage = getScrollPercentage(scrollView.scrollY)
+            val scrollPercentage = getViewScrollPercentage(scrollView.scrollY)
             setRadius(calculateRadius(scrollPercentage))
         }
 
-    private val exampleImages = listOf(
-        R.drawable.millenium,
-        R.drawable.moonlight,
-        R.drawable.brooklin,
-        R.drawable.denzel,
-        R.drawable.first,
-        R.drawable.gay,
-        R.drawable.kakie,
-        R.drawable.loving,
-        R.drawable.startstar,
-        R.drawable.dcstrange,
-        R.drawable.donkeykong,
-        R.drawable.fantastic,
-        R.drawable.matrix2,
-        R.drawable.n1,
-        R.drawable.vol1,
-        R.drawable.vol2
-    )
+    private var maxMargin = DEFAULT_MARGIN
+        set(value) {
+            field = value
+            val scrollPercentage = getFullScrollPercentage(scrollView.scrollY)
+            setMargin(calculateMargin(scrollPercentage))
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,32 +41,17 @@ class MainActivity : AppCompatActivity() {
         initViews()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.blur_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        return when (item?.itemId) {
-            R.id.action_change_image -> {
-                selectImage()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
     private fun initViews() {
         selectImage()
+        maxMargin = resources.getDimension(R.dimen.margin)
         descriptionTextView.text = getString(R.string.lorem_ipslum)
         (bluredArea.layoutParams as ViewGroup.MarginLayoutParams).topMargin = (windowHeight * 0.8).toInt()
         radiusSeekBar.progress = DEFAULT_RADIUS
+
     }
 
     private fun selectImage() {
-        val randomInteger = (0 until exampleImages.size).shuffled(Random(Date().time)).first()
-        backgroundImageView.setImageResource(exampleImages[randomInteger])
+        backgroundImageView.setImageResource(R.drawable.moonlight)
     }
 
     private val windowHeight: Int
@@ -90,8 +63,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun initListeners() {
         scrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, _ ->
-            val scrollPercentage = getScrollPercentage(scrollY)
-            setRadius(calculateRadius(scrollPercentage))
+            setRadius(calculateRadius(getViewScrollPercentage(scrollY)))
+            setMargin(calculateMargin(getFullScrollPercentage(scrollY)))
         })
 
         switch1.setOnCheckedChangeListener { buttonView, isChecked ->
@@ -101,14 +74,20 @@ class MainActivity : AppCompatActivity() {
         radiusSeekBar.setOnSeekListener(::setMaxRadiusValue)
     }
 
-    private fun getScrollPercentage(scroll: Int): Float {
+    private fun getViewScrollPercentage(scroll: Int): Float {
         val screenHeight = (windowHeight * 0.8).toInt()
         var scrollPercentage = (scroll * 100).toFloat() / screenHeight.toFloat()
         if (scrollPercentage > 100) scrollPercentage = 100F
         return scrollPercentage
     }
 
+    private fun getFullScrollPercentage(scroll: Int): Float {
+        val screenHeight = (windowHeight * 0.8).toInt()
+        return (scroll * 100).toFloat() / screenHeight.toFloat()
+    }
+
     private fun calculateRadius(scrollPercentage: Float): Float = (scrollPercentage * maxRadius) / 100
+    private fun calculateMargin(scrollPercentage: Float): Int = ((100 - scrollPercentage) * maxMargin).roundToInt() / 100
 
     private inline fun SeekBar.setOnSeekListener(crossinline progressCallback: (Int) -> Unit) {
         setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -138,5 +117,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun setMaxRadiusValue(progress: Int) {
         maxRadius = progress
+    }
+
+    private fun setMargin(calculateMargin: Int) {
+        with(backgroundImageView) {
+            val marginLayoutParams = (layoutParams as ViewGroup.MarginLayoutParams)
+            if (marginLayoutParams.marginStart != calculateMargin) {
+                marginLayoutParams.setMargins(
+                    calculateMargin,
+                    calculateMargin,
+                    calculateMargin,
+                    calculateMargin
+                )
+                post {
+                    layoutParams = marginLayoutParams
+                }
+            }
+        }
     }
 }

@@ -247,11 +247,9 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     private fun blur(bitmapToBlur: Bitmap?, blurredBitmap: Bitmap?) {
         if (mBlurInput == null || mBlurOutput == null || bitmapToBlur == null || blurredBitmap == null) return
-        with(CoroutineScope(Dispatchers.IO)) {
-            launch { mBlurInput?.copyFrom(bitmapToBlur) }
-            launch { mBlurScript?.setInput(mBlurInput) }
-            launch { mBlurScript?.forEach(mBlurOutput) }
-        }
+        CoroutineScope(Dispatchers.Main).launch { mBlurInput?.copyFrom(bitmapToBlur) }
+        CoroutineScope(Dispatchers.Main).launch { mBlurScript?.setInput(mBlurInput) }
+        CoroutineScope(Dispatchers.Main).launch { mBlurScript?.forEach(mBlurOutput) }
         CoroutineScope(Dispatchers.Main).launch { mBlurOutput?.copyTo(blurredBitmap) }
     }
 
