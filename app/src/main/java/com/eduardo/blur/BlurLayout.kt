@@ -14,13 +14,19 @@ import android.util.TypedValue
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.*
+
+private const val DEFAULT_RADIUS = 10f
+private const val DEFAULT_SIZE = 4f
+private const val SCREEN_LOCATIONS = 2
+private const val SAFE_RADIUS = 25
+private const val MAX_PARENT_VIEW_CONTEXT = 4
+private const val IMAGE_SCALE = 1
 
 class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
-    private var mDownsampleFactor: Float = 0.toFloat() // default 4
-    private var mOverlayColor: Int = 0 // default #aaffffff
-    private var mBlurRadius: Float = 0.toFloat() // default 10dp (0 < r <= 25)
+    private var mDownsampleFactor: Float = 0f
+    private var mOverlayColor: Int = 0
+    private var mBlurRadius: Float = 0f
 
     private var mDirty: Boolean = false
     private var mBitmapToBlur: Bitmap? = null
@@ -34,35 +40,35 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val mPaint: Paint
     private val mRectSrc = Rect()
     private val mRectDst = Rect()
-    // mDecorView should be the root view of the activity (even if you are on a different window like a dialog)
     private var mDecorView: View? = null
-    // If the view is on different root view (usually means we are on a PopupWindow),
-    // we need to manually call invalidate() in onPreDraw(), otherwise we will not be able to see the changes
     private var mDifferentRoot: Boolean = false
 
     private val preDrawListener = ViewTreeObserver.OnPreDrawListener {
-        val locations = IntArray(2)
-        var oldBmp = mBlurredBitmap
+        val locations = IntArray(SCREEN_LOCATIONS)
+        var oldBmp: Bitmap? = mBlurredBitmap
         val decor = mDecorView
         if (decor != null && isShown && prepare()) {
             val redrawBitmap = mBlurredBitmap != oldBmp
             oldBmp = null
             decor.getLocationOnScreen(locations)
-            var x = -locations[0]
-            var y = -locations[1]
+            var x = -locations.first()
+            var y = -locations.last()
 
             getLocationOnScreen(locations)
-            x += locations[0]
-            y += locations[1]
+            x += locations.first()
+            y += locations.last()
 
             // just erase transparent
-            mBitmapToBlur!!.eraseColor(mOverlayColor and 0xffffff)
+            mBitmapToBlur!!.eraseColor(mOverlayColor and android.R.color.white)
 
             val rc = mBlurringCanvas!!.save()
             mIsRendering = true
             RENDERING_COUNT++
             try {
-                mBlurringCanvas!!.scale(1f * mBitmapToBlur!!.width / width, 1f * mBitmapToBlur!!.height / height)
+                mBlurringCanvas!!.scale(
+                    IMAGE_SCALE.toFloat() * mBitmapToBlur!!.width / width,
+                    IMAGE_SCALE.toFloat() * mBitmapToBlur!!.height / height
+                )
                 mBlurringCanvas!!.translate((-x).toFloat(), (-y).toFloat())
                 if (decor.background != null) {
                     decor.background.draw(mBlurringCanvas!!)
@@ -89,7 +95,7 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
         get() {
             var ctx: Context? = context
             var i = 0
-            while (i < 4 && ctx != null && ctx !is Activity && ctx is ContextWrapper) {
+            while (i < MAX_PARENT_VIEW_CONTEXT && ctx != null && ctx !is Activity && ctx is ContextWrapper) {
                 ctx = ctx.baseContext
                 i++
             }
@@ -105,9 +111,13 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
         val a = context.obtainStyledAttributes(attrs, R.styleable.BlurLayout)
         mBlurRadius = a.getDimension(
             R.styleable.BlurLayout_blurRadius,
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10f, context.resources.displayMetrics)
+            TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                DEFAULT_RADIUS,
+                context.resources.displayMetrics
+            )
         )
-        mDownsampleFactor = a.getFloat(R.styleable.BlurLayout_downSampleFactor, 4f)
+        mDownsampleFactor = a.getFloat(R.styleable.BlurLayout_downSampleFactor, DEFAULT_SIZE)
         mOverlayColor = a.getColor(
             R.styleable.BlurLayout_overlayColor,
             ContextCompat.getColor(context, android.R.color.transparent)
@@ -170,16 +180,17 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
         var downsampleFactor = mDownsampleFactor
         var radius = mBlurRadius / downsampleFactor
-        if (radius > 25) {
-            downsampleFactor = downsampleFactor * radius / 25
-            radius = 25f
+        if (radius > SAFE_RADIUS) {
+            downsampleFactor = downsampleFactor * radius / SAFE_RADIUS
+            radius = SAFE_RADIUS.toFloat()
         }
 
         if (mDirty || mRenderScript == null) {
             if (mRenderScript == null) {
                 try {
                     mRenderScript = RenderScript.create(context)
-                    mBlurScript = ScriptIntrinsicBlur.create(mRenderScript, Element.U8_4(mRenderScript))
+                    mBlurScript =
+                        ScriptIntrinsicBlur.create(mRenderScript, Element.U8_4(mRenderScript))
                 } catch (e: RSRuntimeException) {
                     if (isDebug(context)) {
                         if (e.message != null && e.message!!.startsWith("Error loading RS jni library: java.lang.UnsatisfiedLinkError:")) {
@@ -193,7 +204,6 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
                         return false
                     }
                 }
-
             }
 
             mBlurScript!!.setRadius(radius)
@@ -203,18 +213,19 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
         val width = width
         val height = height
 
-        val scaledWidth = Math.max(1, (width / downsampleFactor).toInt())
-        val scaledHeight = Math.max(1, (height / downsampleFactor).toInt())
+        val scaledWidth = Math.max(IMAGE_SCALE, (width / downsampleFactor).toInt())
+        val scaledHeight = Math.max(IMAGE_SCALE, (height / downsampleFactor).toInt())
 
-        if (mBlurringCanvas == null || mBlurredBitmap == null
-            || mBlurredBitmap!!.width != scaledWidth
-            || mBlurredBitmap!!.height != scaledHeight
+        if (mBlurringCanvas == null || mBlurredBitmap == null ||
+            mBlurredBitmap!!.width != scaledWidth ||
+            mBlurredBitmap!!.height != scaledHeight
         ) {
             releaseBitmap()
 
             var r = false
             try {
-                mBitmapToBlur = Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
+                mBitmapToBlur =
+                    Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
                 if (mBitmapToBlur == null) {
                     return false
                 }
@@ -226,7 +237,8 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 )
                 mBlurOutput = Allocation.createTyped(mRenderScript, mBlurInput!!.type)
 
-                mBlurredBitmap = Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
+                mBlurredBitmap =
+                    Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
                 if (mBlurredBitmap == null) {
                     return false
                 }
@@ -247,10 +259,10 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     private fun blur(bitmapToBlur: Bitmap?, blurredBitmap: Bitmap?) {
         if (mBlurInput == null || mBlurOutput == null || bitmapToBlur == null || blurredBitmap == null) return
-        CoroutineScope(Dispatchers.Main).launch { mBlurInput?.copyFrom(bitmapToBlur) }
-        CoroutineScope(Dispatchers.Main).launch { mBlurScript?.setInput(mBlurInput) }
-        CoroutineScope(Dispatchers.Main).launch { mBlurScript?.forEach(mBlurOutput) }
-        CoroutineScope(Dispatchers.Main).launch { mBlurOutput?.copyTo(blurredBitmap) }
+        mBlurInput?.copyFrom(bitmapToBlur)
+        mBlurScript?.setInput(mBlurInput)
+        mBlurScript?.forEach(mBlurOutput)
+        mBlurOutput?.copyTo(blurredBitmap)
     }
 
     override fun onAttachedToWindow() {
@@ -268,9 +280,7 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     override fun onDetachedFromWindow() {
-        if (mDecorView != null) {
-            mDecorView!!.viewTreeObserver.removeOnPreDrawListener(preDrawListener)
-        }
+        mDecorView?.viewTreeObserver?.removeOnPreDrawListener(preDrawListener)
         release()
         super.onDetachedFromWindow()
     }
@@ -280,7 +290,7 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
             mIsRendering -> // Quit here, don't draw views above me
                 throw STOP_EXCEPTION
             RENDERING_COUNT > 0 -> {
-                // Doesn't support blurview overlap on another blurview
+                // Doesn't support blurLayout overlap on another blurLayout
             }
             else -> super.draw(canvas)
         }
@@ -313,6 +323,7 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private class StopException : RuntimeException()
 
     companion object {
+        @JvmStatic
         private var RENDERING_COUNT: Int = 0
 
         private val STOP_EXCEPTION = StopException()
@@ -323,7 +334,6 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
             } catch (e: ClassNotFoundException) {
                 throw RuntimeException("RenderScript support not enabled. Add \"android { defaultConfig { renderscriptSupportModeEnabled true }}\" in your build.gradle")
             }
-
         }
 
         private var DEBUG: Boolean? = null
@@ -332,7 +342,7 @@ class BlurLayout(context: Context, attrs: AttributeSet) : View(context, attrs) {
             if (DEBUG == null && ctx != null) {
                 DEBUG = ctx.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
             }
-            return DEBUG === java.lang.Boolean.TRUE
+            return DEBUG == true
         }
     }
 }
